@@ -8,6 +8,8 @@ const register = async (req, res) => {
     const { email, name } = req.body;
     const userExists = await VetModel.findOne({ email });
 
+    console.log(email, name , ' esto envía si no existe');
+
     if (userExists) {
         const error = new Error('Usuario ya registrado');
 
@@ -18,12 +20,10 @@ const register = async (req, res) => {
         const vet = new VetModel(req.body);
         const vetSave = await vet.save();
 
+        //! Aca 
         emailRegister({
             email,
             name,
-            /// Tube que modificar esto para poder tener estos datos en el frontend
-            web,
-            phone,
             token: vetSave.token,
         });
 
@@ -34,7 +34,6 @@ const register = async (req, res) => {
 };
 
 const profile = (req, res) => {
-    // console.log(req.vet);
     const { vet } = req;
     res.json({ profile: vet });
 };
@@ -168,10 +167,10 @@ const updateProfile = async (req, res) => {
     }
 
     //! Evitar error el caso de que el correo actualizado no exista en otro perfil para que no falle el proyecto
-    const {email} = req.body
+    const { email } = req.body;
     if (vet.email !== req.body.email) {
-        const existEmail = await VetModel.findOne({email})
-        if(existEmail){
+        const existEmail = await VetModel.findOne({ email });
+        if (existEmail) {
             const error = new Error('Ese email ya esta en uso');
             return res.status(400).json({ message: error.message });
         }
@@ -186,8 +185,6 @@ const updateProfile = async (req, res) => {
 
         const vetUpdate = await vet.save();
         res.json(vetUpdate);
-
-        
     } catch (error) {
         console.log(error);
     }
@@ -196,8 +193,8 @@ const updateProfile = async (req, res) => {
 /// Creamos otra para actualizar el password por que esta es diferente dado a que se tiene el email
 const updatePassword = async (req, res) => {
     /// 1) Leer los datos
-    const {id} = req.vet;
-    const {pwd_current, pwd_new} = req.body;
+    const { id } = req.vet;
+    const { pwd_current, pwd_new } = req.body;
 
     /// 2) Comparar que el veterinario existe
     const vet = await VetModel.findById(id);
@@ -207,18 +204,18 @@ const updatePassword = async (req, res) => {
     }
     /// 3) Comprobar su password
 
-    //- utilizamos el método del modelo para comparar las contraseñas hacheadas 
-    if(await vet.checkPassword(pwd_current) ){
+    //- utilizamos el método del modelo para comparar las contraseñas hacheadas
+    if (await vet.checkPassword(pwd_current)) {
         /// 4) Almacenar el nuevo password
         //- Esto se guarda Hasheado gracias al pre que creamos en el modelo
         vet.password = pwd_new;
         await vet.save();
         res.json({ message: 'Contraseña almacenada correctamente' });
     } else {
-         const error = new Error('La contraseña actual es incorrecta');
-         return res.status(400).json({ message: error.message });
+        const error = new Error('La contraseña actual es incorrecta');
+        return res.status(400).json({ message: error.message });
     }
-}
+};
 
 export {
     register,
@@ -229,5 +226,5 @@ export {
     checkToken,
     newPassword,
     updateProfile,
-    updatePassword /// Exportando la función
+    updatePassword, /// Exportando la función
 };
